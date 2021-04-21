@@ -1,0 +1,109 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+---
+title: "Lesson 8 Practical Exercise"
+author: "Austin Logan"
+footer: `r paste('Lesson 8 Practical Exercise')`
+date: "`r format(as.Date(c('2021/04/21')), '%d %B %Y')`"
+output:
+  pdf_document:
+    df_print: kable
+  html_document:
+    df_print: paged
+  slidy_presentation:
+    code_folding: hide
+    fig_caption: yes
+    smart: no
+keep_tex: yes
+graphics: yes
+---
+
+# 1. Preliminaries
+
+```{r intro, echo=FALSE,message=FALSE, warning=FALSE}
+options(repos="https://cran.rstudio.com" )
+library(xlsx)
+library(printr)
+library(xtable)
+library(formatR)
+library(nlme)
+options(xtable.comment = FALSE, xtable.type="latex")
+```
+
+# Perform data housekeeping - upload data for Example 5.6, Example 5.7, and Printing Ink; name columns, display to make sure it reads properly, etc. 
+
+```{r, echo=T, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+file=file.path(getwd(),"data-ex-PrintingInk.xlsx")
+printData=read.xlsx(file,1)
+names(printData)=c("x1","x2","x3","y_bar","sdev")
+attach(printData)
+printData
+```
+
+# 2. Example 5.5 Method (using Printing Ink data) 
+
+## a) Create a linear model relating the regressors to the standard deviation ('s' in th data file)
+
+```{r, echo=T, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+inkModel=lm(sdev~x1+x2+x3)
+summary(inkModel)
+```
+
+## b) Define model weights
+
+```{r, echo=T, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+printData$weights=1/(inkModel$fitted.values^2+1)
+```
+
+## c) Solve weighted least squares using matrices
+
+```{r, echo=T, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+anv=anova(inkModel)
+V=anv$`Mean Sq`*diag(1/printData$weights)
+W=solve(V)
+ones=matrix(1,27,1)
+X=matrix(c(ones,x1,x2,x3),27,4)
+beta=solve(t(X)%*%W%*%X)%*%t(X)%*%W%*%y_bar
+beta
+```
+
+## d) Solve weighted least squares using lm() and entering weights
+
+
+```{r, echo=T, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+weightModel=lm(y_bar~x1+x2+x3,weights=printData$weights)
+summary(weightModel)
+```
+
+## e) Display both sets of coefficients - should be the same (minor differences possible due to rounding)
+
+```{r, echo=T, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+beta
+weightModel$coefficients
+```
+
+# 3. Example 5.6 (p. 196-199)
+
+## a) Create a linear model predicting time as a function of aspect, paper,and the interaction. Results should match Table 5.11.
+
+```{r, echo=T, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+
+```
+
+## b) Create a linear model of groups, with the response being the group average (i.e. use Table 5.14 as input data). Results should match Table 5.15.
+
+```{r, echo=T, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+
+```
+
+# 4. Example 5.7 (p.201-202)
+
+## a) Run regression model using City as a random factor using lme(). Compare StdDev for (Intercept) and Residual to variances in Figure 5.12.
+
+
+```{r, echo=T, tidy=TRUE, tidy.opts=list(width.cutoff=60)}
+
+```
